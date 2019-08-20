@@ -1,0 +1,600 @@
+<div style='display:none'><span id="cz_check_tips">南航金卡会员值机，建议到航空公司官网或值机柜台，否则无法获得相应服务；继续值机请“确定”，否则“取消”。</span></div>
+
+<script>
+    var curSeatNo = "";
+    var cuss_zw_noSelectSeat = "请选择座位！";
+    var fltMsg = jQuery("#cz_check_tips").html();
+
+    function btnSeatinfoExit_click(){
+        top.window.location.href = "/lkfw/onlinecheckin";
+    }
+
+    function btnBackCardInfo_click(){
+        jQuery("#cki_prov_loading").hide();
+        jQuery("#cki_next_loading").hide();
+
+        jQuery("#cussSearmapinfoForm #error").empty().hide();
+        var data = jQuery("#stl_onlinecheckin_processing form").serialize();
+        jQuery.post("/cki-portlet/card", data, function(s){
+            if(s.indexOf("ERROR:")==0){
+                s = s.substring(6);
+                jQuery("#cussSearmapinfoForm #error").append(s).show();
+            }else{
+                jQuery("#cki_portlet_main").empty();
+                jQuery("#cki_portlet_main").append(s);
+            }
+            jQuery("#cussSearmapinfoForm #btnBackCardInfo").attr('disabled',false);
+        });
+
+        jQuery("#cki_prov_loading").show();
+
+        jQuery("#cussSearmapinfoForm #btnBackCardInfo").attr('disabled','disabled');
+        document.getElementById('btnBackCardInfo').disabled=true;
+    }
+
+    function _selectSeat(newSeatNo){
+        if(newSeatNo!=curSeatNo){
+            jQuery("#cussSearmapinfoForm #"+newSeatNo).removeClass("icon-seat-selectable").addClass("icon-seat-selected");
+            if(curSeatNo!=""){
+                jQuery("#cussSearmapinfoForm #"+curSeatNo).removeClass("icon-seat-selected").addClass("icon-seat-selectable");
+            }
+
+            jQuery("#cussSearmapinfoForm #selectedSeat").empty().append(newSeatNo);
+            curSeatNo = newSeatNo;
+        }
+    }
+
+    function btnFinishSeatmapSelect_click(curFlightNo){
+        jQuery("#cki_prov_loading").hide();
+        jQuery("#cki_next_loading").hide();
+        if("" != curFlightNo && (curFlightNo.indexOf('CZ') != -1 || curFlightNo.indexOf('cz') != -1) ){
+            if(!confirm(fltMsg)){
+                return false;
+            }
+        }
+        jQuery("#cussSearmapinfoForm #error").empty().hide();
+        if(curSeatNo==""){
+            jQuery("#cussSearmapinfoForm #error").append(cuss_zw_noSelectSeat).show();
+        }else{
+            jQuery("#cussSearmapinfoForm").find("#seatNo").val(curSeatNo);
+            var _data = jQuery("#stl_onlinecheckin_processing form").serialize();
+
+            jQuery.ajax({
+                type: "POST",
+                url: "/cki-portlet/pa",
+                data: _data,
+                timeout: 120000,
+                success: function(s){
+                    jQuery("#cki_prov_loading").hide();
+                    jQuery("#cki_next_loading").hide();
+
+                    if(s.indexOf("ERROR:")==0){
+                        s = s.substring(6);
+                        jQuery("#cussSearmapinfoForm #error").append(s).show();
+                    }else{
+                        jQuery("#cki_portlet_main").empty();
+                        jQuery("#cki_portlet_main").append(s);
+                    }
+                    jQuery("#cussSearmapinfoForm #btnFinishSeatmapSelect").attr('disabled',false);
+                    jQuery("#cki_next_loading").hide();
+                },
+                error: function(req, s, e){
+                    jQuery("#cki_prov_loading").hide();
+                    jQuery("#cki_next_loading").hide();
+                    jQuery("#cussSearmapinfoForm #btnFinishSeatmapSelect").attr('disabled',false);
+                    jQuery("#cki_next_loading").hide();
+                }
+            });
+
+            jQuery("#cki_next_loading").show();
+
+            jQuery("#cussSearmapinfoForm #btnFinishSeatmapSelect").attr('disabled','disabled');
+            document.getElementById('btnFinishSeatmapSelect').disabled=true;
+        }
+    }
+</script>
+
+
+<div style='display: none'>
+    <label id="stl_search_content_loading">正在处理中，请稍等...</label>
+</div>
+
+<div>
+    <div class="stl-checkinprocess mb20">
+        <div class="checkin-step4"></div>
+        <ul>
+            <li>用户验证</li>
+            <li>行程信息</li>
+            <li>航班信息</li>
+            <li  class="cur">选择座位</li>
+            <li>成功值机</li>
+        </ul>
+        <div class="clear"></div>
+    </div>
+    <div id="stl_onlinecheckin_processing">
+        <form id="cussSearmapinfoForm" method="post" action="">
+            <div id='error' class='stl-errormessage' style='display: none;'></div>
+
+            <div class="onlinecheckin_list">
+                <table class="table">
+                    <tbody>
+                    <tr class="header">
+                        <td colspan="9"><i class="icon-table icon-table-user"></i> 姓名： 邬曼皙</td>
+                    </tr>
+                    <tr>
+                        <th>日期</th>
+                        <th>航班号</th>
+                        <th>出发地</th>
+                        <th>目的地</th>
+                        <th>舱位</th>
+                        <th>航班状态</th>
+                    </tr>
+                    <tr>
+                        <td>2018-05-06</td>
+                        <td>HU7351</td>
+                        <td>广州</td>
+                        <td>成都</td>
+                        <td>P</td>
+                        <td>正在办理</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="onlinecheckin_list_btn">
+                    <ul>
+                        <li class="pull-left wp30">
+                            <input id="btnBackCardInfo"
+                                   value='上一步' onclick="btnBackCardInfo_click()"
+                                   class="btn btn-green btn-small" type="button">
+                            <img id="cki_prov_loading" src="/resource/images/loading.gif" style="display:none;"/>
+                        </li>
+                        <li class="pull-left wp70 tr">
+                            <img id="cki_next_loading" src="/resource/images/loading.gif" style="display:none;"/>
+                            <input
+                                    id="btnFinishSeatmapSelect" value='确认办理' type="button"
+                                    class="btn btn-green btn-small"
+                                    onclick='btnFinishSeatmapSelect_click("HU7351")'> <input
+                                id="Submit6" class="btn btn-white btn-xsmall"
+                                onclick="btnSeatinfoExit_click();" type="button" value='取消'
+                                name="Submit6"></li>
+                    </ul>
+                </div>
+                <div class="clear mb20"></div>
+            </div>
+
+            <ul class="onlinecheckin_seat stl-seatinfo">
+                <li class="onlinecheckin_seat_example pull-left wp64 mrp1">
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            <th colspan="5">座位图例</th>
+                        </tr>
+                        <tr class="stl-seatexample">
+                            <td><i class="enable icon-seat icon-seat-selectable"></i>
+                                <p>
+                                    可选座位
+                                </p></td>
+                            <td><i class="locked icon-seat icon-seat-locked"></i>
+                                <p>
+                                    已占座位
+                                </p></td>
+                            <td><i class="selected icon-seat icon-seat-selected"></i>
+                                <p>
+                                    您的座位
+                                </p></td>
+                            <td><i class="icon-seat icon-seat-disabled"></i>
+                                <p>
+                                    不可选座位
+                                </p></td>
+                            <td><i class="exist icon-seat icon-seat-exit"></i>
+                                <p>
+                                    安全出口
+                                </p></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </li>
+
+                <li class="onlinecheckin_seat_selected pull-left wp35">
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            <th>您选择的座位</th>
+                        </tr>
+                        <tr class="stl-seatnumber">
+                            <td><p id="selectedSeat"></p></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </li>
+
+                <li class="onlinecheckin_seat_list">
+                    <table class="table stl-seattable">
+                        <tbody>
+                        <tr>
+                            <th width='5%'></th>
+                            <th width='10%'>K</th>
+                            <th width='10%'>J</th>
+                            <th width='10%'>H</th>
+                            <th width='10%'> </th>
+                            <th width='10%'> </th>
+                            <th width='10%'>C</th>
+                            <th width='10%'>B</th>
+                            <th width='10%'>A</th>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>31</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>32</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>33</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>34</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>35</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>36</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>37</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>38</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("38J")'><i id='38J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("38B")'><i id='38B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("38A")'><i id='38A' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                        </tr>
+                        <tr>
+                            <td>39</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("39J")'><i id='39J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>40</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("40J")'><i id='40J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("40B")'><i id='40B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>41</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-exit'><span class=exist></span></i></td>
+                            <td><i class='icon-seat icon-seat-exit'><span class=exist></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>42</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-exit'><span class=exist></span></i></td>
+                            <td><i class='icon-seat icon-seat-exit'><span class=exist></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>43</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("43J")'><i id='43J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("43B")'><i id='43B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("43A")'><i id='43A' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                        </tr>
+                        <tr>
+                            <td>44</td>
+                            <td><a href='javascript:_selectSeat("44K")'><i id='44K' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("44J")'><i id='44J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("44H")'><i id='44H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("44C")'><i id='44C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("44B")'><i id='44B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>45</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("45J")'><i id='45J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("45H")'><i id='45H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("45C")'><i id='45C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("45B")'><i id='45B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>46</td>
+                            <td><a href='javascript:_selectSeat("46K")'><i id='46K' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("46J")'><i id='46J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("46H")'><i id='46H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("46C")'><i id='46C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("46B")'><i id='46B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>47</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("47J")'><i id='47J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("47H")'><i id='47H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("47B")'><i id='47B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>48</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("48J")'><i id='48J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("48H")'><i id='48H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("48C")'><i id='48C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("48B")'><i id='48B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>49</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("49J")'><i id='49J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("49H")'><i id='49H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("49C")'><i id='49C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>50</td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                            <td><a href='javascript:_selectSeat("50J")'><i id='50J' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("50H")'><i id='50H' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href='javascript:_selectSeat("50C")'><i id='50C' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><a href='javascript:_selectSeat("50B")'><i id='50B' class='icon-seat icon-seat-selectable'><span></span></i></a></td>
+                            <td><i class='icon-seat icon-seat-locked'><span class=locked></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>51</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>52</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>53</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>54</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>55</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>56</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>57</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td>58</td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td></td>
+                            <td></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                            <td><i class='icon-seat icon-seat-disabled'><span></span></i></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th width='5%'></th>
+                            <th width='10%'>K</th>
+                            <th width='10%'>J</th>
+                            <th width='10%'>H</th>
+                            <th width='10%'> </th>
+                            <th width='10%'> </th>
+                            <th width='10%'>C</th>
+                            <th width='10%'>B</th>
+                            <th width='10%'>A</th>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                    <div class="clear"></div>
+                </li>
+
+            </ul>
+
+
+
+            <input id="selectedSeg" name="selectedSeg" type="hidden"
+                   value="OPEN FOR USE,HU,CAN,880-2162350975,邬曼皙,1,HU7351,P,0,G" /> <input id="psgname" name="psgname"
+                                                                                           type="hidden" value="邬曼皙" /> <input id="inputtype"
+                                                                                                                               name="inputtype" type="hidden" value="ETNO" /> <input
+                id="inputno" name="inputno" type="hidden" value="8802162350975" /> <input
+                id="languageid" name="languageid" type="hidden"
+                value="zh_CN" /> <input id="cardType" name="cardType"
+                                        type="hidden" value="" /> <input id="cardNum"
+                                                                         name="cardNum" type="hidden" value="" /> <input
+                id="seatNo" name="seatNo" type="hidden" value="">
+            <input id="phoneno" name="phoneno" type="hidden" value="15377617500" />
+        </form>
+    </div>
+</div>

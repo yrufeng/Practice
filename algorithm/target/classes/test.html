@@ -1,0 +1,354 @@
+<html>
+<head>
+    <script>
+        var allowAirportComp = "CA,NS,PN,ZH,HU,MU,JD,FM,3U,SC,CZ,EU,8L,OQ,BK,HO,KY,MF,GS,GJ";
+        var airlinesMapJson = jQuery.parseJSON('{"airline_cn_MF":"厦门航空公司","airline_cn_3U":"四川航空公司","airline_url_9C":"http://www.china-sss.com/","airline_url_MU":"http://www.ceair.com/","airline_cn_CA":"中国国际航空公司","airline_cn_FM":"上海航空公司","airline_url_SC":"http://www.shandongair.com.cn/","airline_cn_HU":"中国海南航空公司","airline_url_CZ":"http://www.csair.com/cn/","airline_cn_JD":"首都航空公司","airline_url_CA":"http://www.airchina.com.cn/","airline_url_ZH":"http://www.shenzhenair.com/","airline_cn_CZ":"中国南方航空公司","airline_cn_SC":"山东航空公司","airline_url_HR":"http://www.ceair.com/mu/main/lh/index.html","airline_cn_MU":"中国东方航空公司","airline_url_FM":"http://www.ceair.com/mu/main/sh/index.html","airline_url_HU":"http://www.hnair.com/","airline_url_MF":"http://www.xiamenair.com/cn/cn/","airline_cn_HR":"中国联合航空公司","airline_cn_ZH":"深圳航空公司","airline_url_JD":"http://www.capitalairlines.com.cn/index.jsp","airline_url_3U":"http://www.scal.com.cn/B2C","airline_cn_9C":"春秋航空公司"}');
+        var airLineAbbreviationsListJson = jQuery.parseJSON('["3U","9C","CA","CZ","FM","HR","HU","JD","MF","MU","SC","ZH"]');
+
+        var please_visit ='请访问';
+        var the_airportcom_isnot_allow ='目前还不支持该航空公司网上值机';
+        var cuss_seginfo_seg_noselect = '请选择值机航班！';
+        var cuss_seginfo_seg_noopen = '请选择未办理的航班！';
+        var cuss_seginfo_seg_nocheckin  = '请选择已值机的航班！';
+        var cuss_seginfo_seg_timeout  = 'cuss_seginfo_seg_timeout';
+
+        function btnReprint_click(){
+            jQuery("#cki_prov_loading").hide();
+            jQuery("#cki_next_loading").hide();
+            var cussSeginfoForm = jQuery("#cussSeginfoForm");
+            var error1 = jQuery(cussSeginfoForm).find("#error1");
+            jQuery(error1).hide().empty();
+
+
+            var rdo = jQuery(cussSeginfoForm).find("input[name=rdoSeg]:checked");
+            if(rdo==null || rdo.length<=0){
+                jQuery(error).append(cuss_seginfo_seg_noselect);
+            }else{
+                var segValue = jQuery(rdo).slice(0,1).val();
+                var arr = segValue.split(",");
+
+                jQuery(cussSeginfoForm).find("#selectedSeg").val(segValue);
+                var _data = jQuery("#stl_onlinecheckin_processing form").serialize();
+
+                jQuery.ajax({
+                    type: "POST",
+                    url: "/cki-portlet/boardingCzVipCheck",
+                    data: _data,
+
+                    timeout: 60000,
+
+                    success: function(s){
+                        if(s.indexOf("ERROR:")==0){
+
+                            s = s.substring(6);
+                            jQuery(error1).append(s).show();
+                        }else{
+                            if(arr[0].indexOf("CHECKED")!=-1){//CHECKED IN
+                                jQuery(cussSeginfoForm).find("#selectedSeg").val(segValue);
+                                jQuery(cussSeginfoForm).attr("action", "/cki-portlet/boardingCheck");
+                                jQuery(cussSeginfoForm).attr("target", "_blank");
+                                jQuery(cussSeginfoForm).submit();
+                            }else{
+                                jQuery(error1).append(cuss_seginfo_seg_nocheckin);
+                            }
+                        }
+                    },
+                    error: function(req, s, e){
+                        jQuery("#cki_prov_loading").hide();
+                        jQuery("#cki_next_loading").hide();
+                    }
+                });
+
+            }
+            document.getElementById('btnReprint').disabled=true;
+
+            if(document.getElementById('btnReprint').disabled == true){
+                setTimeout("javascript:document.getElementById('btnReprint').disabled=false",30000);
+
+            }
+        }
+
+
+        function cuss_seginfo_pa(){
+
+            jQuery("#cki_prov_loading").hide();
+            jQuery("#cki_next_loading").hide();
+
+            var cussSeginfoForm = jQuery("#cussSeginfoForm");
+
+            var error1 = jQuery(cussSeginfoForm).find("#error1");
+            jQuery(error1).empty().hide();
+
+            try{
+                var success1 = jQuery(cussSeginfoForm).find("#pw_success");
+                if(success1!=null) jQuery(success1).empty().hide();
+            }catch(e){
+
+            }
+
+            var _the_airportcom_isnot_allow = the_airportcom_isnot_allow;
+
+            var rdo = jQuery(cussSeginfoForm).find("input[name=rdoSeg]:checked");
+
+            if(rdo==null || rdo.length<=0){
+
+                jQuery(error1).append(cuss_seginfo_seg_noselect).show();
+                return false;
+
+            }else{
+                var segValue = jQuery(rdo).slice(0,1).val();
+                var arr = segValue.split(",");
+
+                if(arr[0].indexOf("OPEN")!=-1){//OPEN FOR USE
+
+                    if(allowAirportComp.indexOf(arr[1]) == -1){
+                        if(!!(airlinesMapJson["airline_cn_"+arr[1]])){
+                            _the_airportcom_isnot_allow += ","+please_visit+'<a target="_blank" style=" font-style: italic;" href="'+airlinesMapJson["airline_url_"+arr[1]]+'">'+airlinesMapJson["airline_cn_"+arr[1]]+'</a>';
+                        }
+                        jQuery(error1).append(_the_airportcom_isnot_allow).show();
+                        return false;
+                    }
+
+                    jQuery(cussSeginfoForm).find("#selectedSeg").val(segValue);
+                    var _data = jQuery("#stl_onlinecheckin_processing form").serialize();
+
+                    jQuery.ajax({
+                        type: "POST",
+                        url: "/cki-portlet/card",
+                        data: _data,
+                        timeout: 60000,
+                        success: function(s){
+                            jQuery("#cki_prov_loading").hide();
+                            jQuery("#cki_next_loading").hide();
+
+                            if(s.indexOf("ERROR:")==0){
+                                s = s.substring(6);
+                                jQuery(error1).append(s).show();
+
+                            }else{
+                                jQuery("#cki_portlet_main").empty();
+                                jQuery("#cki_portlet_main").append(s);
+                            }
+                            jQuery("#stl_onlinecheckin_processing #btnStartPA").attr('disabled',false);
+                            jQuery("#cki_next_loading").hide();
+                        },
+                        error: function(req, s, e){
+                            jQuery("#cki_prov_loading").hide();
+                            jQuery("#cki_next_loading").hide();
+                            jQuery("#stl_onlinecheckin_processing #btnStartPA").attr('disabled',false);
+                            jQuery("#cki_next_loading").hide();
+                        }
+                    });
+
+                    jQuery("#cki_next_loading").show();
+
+                    jQuery("#stl_onlinecheckin_processing #btnStartPA").attr('disabled','disabled');
+                    document.getElementById('btnStartPA').disabled=true;
+                }else{
+                    jQuery(error).append(cuss_seginfo_seg_noopen);
+                    return false;
+                }
+            }
+        }
+
+        function btnBackUserinfo_click(){
+            jQuery("#cki_prov_loading").show();
+            jQuery("#cki_next_loading").hide();
+            top.window.location.href = "/lkfw/onlinecheckin";
+        }
+
+        function _radioClick(v){
+            var arr = v.split(",");
+            var s = arr[0];
+
+            if(s.indexOf("OPEN")>=0){
+                jQuery("#cussSeginfoForm #btnStartPA").show();
+                jQuery("#cussSeginfoForm #btnPW").hide();
+                jQuery("#cussSeginfoForm #btnReprint").hide();
+            }else if(s.indexOf("CHECKED")>=0){
+                jQuery("#cussSeginfoForm #btnStartPA").hide();
+                jQuery("#cussSeginfoForm #btnPW").show();
+                jQuery("#cussSeginfoForm #btnReprint").show();
+            }else{
+                jQuery("#cussSeginfoForm #btnStartPA").hide();
+                jQuery("#cussSeginfoForm #btnPW").hide();
+                jQuery("#cussSeginfoForm #btnReprint").hide();
+            }
+        }
+
+        function btnPW_click(){
+            var cussSeginfoForm = jQuery("#cussSeginfoForm");
+
+            var error1 = jQuery(cussSeginfoForm).find("#error1");
+            jQuery(error1).hide().empty();
+
+            jQuery("#cki_prov_loading").hide();
+            jQuery("#cki_next_loading").hide();
+
+            var confirm_msg = "确认取消乘机？该操作只能允许三次，请谨慎操作此功能!";
+            if(confirm(confirm_msg)){
+                var rdo = jQuery(cussSeginfoForm).find("input[name=rdoSeg]:checked");
+                if(rdo==null || rdo.length<=0){
+                    jQuery(error1).append(cuss_seginfo_seg_noselect).show();
+                }else{
+                    var segValue = jQuery(rdo).slice(0,1).val();
+                    var arr = segValue.split(",");
+                    if(arr[0].indexOf("CHECKED")!=-1){//CHECKED IN
+                        jQuery(cussSeginfoForm).find("#selectedSeg").val(segValue);
+                        var _data = jQuery("#stl_onlinecheckin_processing form").serialize();
+
+
+                        jQuery.ajax({
+                            type: "POST",
+                            url: "/cki-portlet/pw",
+                            data: _data,
+
+                            timeout: 120000,
+
+                            success: function(s){
+
+                                jQuery("#cki_prov_loading").hide();
+                                jQuery("#cki_next_loading").hide();
+
+                                if(s.indexOf("ERROR:")==0){
+
+                                    s = s.substring(6);
+                                    jQuery(error1).append(s).show();
+                                }else{
+                                    jQuery("#cki_portlet_main").empty();
+                                    jQuery("#cki_portlet_main").append(s);
+                                }
+                                jQuery("#stl_onlinecheckin_processing #btnPW").attr('disabled',false);
+
+                                jQuery("#cki_next_loading").hide();
+                            },
+                            error: function(req, s, e){
+
+                                jQuery("#cki_prov_loading").hide();
+                                jQuery("#cki_next_loading").hide();
+                                jQuery("#stl_onlinecheckin_processing #btnPW").attr('disabled',false);
+
+                                jQuery("#cki_next_loading").hide();
+                                alert(cuss_seginfo_seg_timeout);
+                                top.window.location.href = "/lkfwonlinecheckin";
+                            }
+                        });
+
+                        jQuery("#cki_next_loading").show();
+                        jQuery("#stl_onlinecheckin_processing #btnPW").attr('disabled','disabled');
+
+                        document.getElementById('btnPW').disabled=true;
+
+
+                    }else{
+                        jQuery(error1).append(cuss_seginfo_seg_nocheckin).show();
+                    }
+                }
+            }
+        }
+        <script>
+
+        <div style='display: none'>
+        <label id="stl_search_content_loading">正在处理中，请稍等...</label>
+        </div>
+
+        <div>
+        <div class="stl-checkinprocess mb20">
+        <div class="checkin-step2"></div>
+        <ul>
+        <li>用户验证</li>
+        <li class="cur">行程信息</li>
+        <li>航班信息</li>
+        <li>选择座位</li>
+        <li>成功值机</li>
+        </ul>
+        <div class="clear"></div>
+        </div>
+        <div id="stl_onlinecheckin_processing">
+        <form id="cussSeginfoForm" method="post" action="">
+        <div id="error1" class="stl-errormessage" style="display: none;"></div>
+
+
+
+        <div class="onlinecheckin_list">
+        <h3>
+        请选择您的本次行程
+        </h3>
+        <table class="table">
+        <tbody>
+        <tr>
+        <th width="15%">编号</th>
+        <th width="20%">姓名</th>
+        <th width="30%">证件类型</th>
+        <th width="35%">证件号码</th>
+        </tr>
+        <tr>
+        <td>01</td>
+        <td>白小林</td>
+        <td>票号</td>
+        <td>7818246405692</td>
+        </tr>
+        </tbody>
+        </table>
+
+        <table class="table">
+        <tbody>
+        <tr>
+        <th>出发日期</th>
+        <th>航班号</th>
+        <th>出发地</th>
+        <th>目的地</th>
+        <th>舱位</th>
+        <th>航班状态</th>
+        <th>请选择</th>
+        </tr>
+
+        <tr>
+
+
+        <td>2018-05-05</td>
+        <td>MU5182</td>
+        <td>广州</td>
+        <td>北京</td>
+        <td>K</td>
+        <td>未办理</td>
+        <td><input type="radio" name="rdoSeg"
+        value="OPEN FOR USE,MU,CAN,781-8246405692,白小林,1,MU5182,K,0,'G'"
+        onclick="javascript:_radioClick(this.value);"></td>
+        </tr>
+
+        </tbody>
+        </table>
+
+        <div class="onlinecheckin_list_btn">
+        <ul>
+        <li class="pull-left wp30">
+        <input id="btnBackUserinfo"
+        class="btn btn-green btn-small" value='上一步' type="button"
+        onclick="btnBackUserinfo_click()" >
+        <img id="cki_prov_loading" src="/resource/images/loading.gif" style="display:none;">
+        </li>
+        <li class="pull-left wp70 tr">
+        <img id="cki_next_loading" src="/resource/images/loading.gif" style="display:none;">
+        <input id="btnStartPA" style="display: none;" class="btn btn-green btn-small" value='办理乘机' type="button" onclick="cuss_seginfo_pa()">
+        <input id="btnPW" style="display: none;" class="btn btn-green btn-small" value='取消乘机' type="button" onclick="btnPW_click()">
+        <input id="btnReprint" style="display: none;" class="btn btn-green btn-large" value='补打登机牌' type="button" onclick="btnReprint_click()">
+        <input id="btnSeginfoExit" onclick="btnBackUserinfo_click()" class="btn btn-white btn-xsmall" type="button" value='取消'>
+        </li>
+        </ul>
+        </div>
+
+        </div>
+        <input id="selectedSeg" name="selectedSeg" type="hidden" value="" >
+        <input id="psgname" name="psgname" type="hidden" value="白小林" >
+        <input id="inputtype" name="inputtype" type="hidden"
+        value="ETNO" > <input id="inputno" name="inputno"
+        type="hidden" value="7818246405692" > <input id="languageid"
+        name="languageid" type="hidden" value="" >
+        <input id="phoneno" name="phoneno" type="hidden" value="15377617500" >
+        </form>
+        </div>
+        </div></script>
+</head>
+<body></body>
+</html>

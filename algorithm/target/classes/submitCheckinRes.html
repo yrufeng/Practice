@@ -1,0 +1,181 @@
+<script>
+    function isCN(){
+        var _lan  = 'zh_CN';
+        if(_lan.indexOf("zh")!=-1){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    var weatherURL = '/weather-portlet/weather?action=getBySZM&&SZM=PEK'+(isCN()?'':'&language=en&country=US');
+
+    function btnFinishPaExit_click(){
+        top.window.location.href = "/lkfw/onlinecheckin";
+    }
+
+    jQuery(document).ready(function(){
+        var cuss_weather_today = "今天";
+        var cuss_weather_tomorrow = "明天";
+        var cuss_weather_after_tomorrow = "后天";
+
+        var frm = jQuery("#cussFinishPaForm");
+        var s = "";
+        try{
+            jQuery.get(weatherURL, null, function(data, status){
+                if(data.meta_Data.respone_code=="0"){
+                    var weathers = data.raw_data[0].weathers;
+
+                    var weather0 = weathers[0].weather;
+                    var s0 = weathers[0].tempurature;
+                    var date0 = weathers[0].date;
+                    var icon0=get_weahter_img(weathers[0]['b_img'][0],weathers[0]['b_img'][1]);
+                    jQuery("#wazj5_weather1 #target_city_today").empty().append(s0);
+                    jQuery("#wazj5_weather1 #target_date_today").empty().append(date0);
+                    jQuery("#wazj5_weather1 #target_desc_today").empty().append(weather0);
+                    jQuery("#wazj5_weather1 #target_icon_today").removeClass().addClass(icon0);
+
+                    var weather1 = weathers[1].weather;
+                    var s1 = weathers[1].tempurature;
+                    var date1 = weathers[1].date;
+                    var icon1=get_weahter_img(weathers[1]['b_img'][0],weathers[1]['b_img'][1]);
+                    jQuery("#wazj5_weather2 #target_city_tomorrow").empty().append(s1);
+                    jQuery("#wazj5_weather2 #target_date_tomorrow").empty().append(date1);
+                    jQuery("#wazj5_weather2 #target_desc_tomorrow").empty().append(weather1);
+                    jQuery("#wazj5_weather2 #target_icon_tomorrow").removeClass().addClass(icon1);
+
+                    var weather2 = weathers[2].weather;
+                    var s2 =weathers[2].tempurature;
+                    var date2 = weathers[2].date;
+                    var icon2=get_weahter_img(weathers[2]['b_img'][0],weathers[2]['b_img'][1]);
+                    jQuery("#wazj5_weather3 #target_city_after_tomorrow").empty().append(s2);
+                    jQuery("#wazj5_weather3 #target_date_after_tomorrow").empty().append(date2);
+                    jQuery("#wazj5_weather3 #target_desc_after_tomorrow").empty().append(weather2);
+                    jQuery("#wazj5_weather3 #target_icon_after_tomorrow").removeClass().addClass(icon2);
+                }else{
+                    jQuery("#wazj5_weather1 #target_date_today").empty().append(s);
+                    jQuery("#wazj5_weather2 #target_city_tomorrow").empty().append(s);
+                    jQuery("#wazj5_weather3 #target_desc_after_tomorrow").empty().append(s);
+                }
+            }, "json");
+        }catch(e){
+            jQuery("#wazj5_weather1 span").empty().append(s);
+            jQuery("#wazj5_weather2 span").empty().append(s);
+            jQuery("#wazj5_weather3 span").empty().append(s);
+        }
+    });
+
+    function btnPreviewBoardingPass_click(){
+        var frm = jQuery("#cussFinishPaForm");
+        jQuery(frm).attr("action", "/cki-portlet/boardingCheck");
+        jQuery(frm).attr("target", "_blank");
+        jQuery(frm).submit();
+        document.getElementById('btnPreviewBoardingPass').disabled=true;
+        if(document.getElementById('btnPreviewBoardingPass').disabled == true){
+            setTimeout("javascript:document.getElementById('btnPreviewBoardingPass').disabled=false",30000);
+        }
+    }
+
+    //判断使用哪张图片
+    //img2为未知图片时，就返回img1；否则返回img2
+    function get_weahter_img(img1,img2){
+        if(img2=='icon-weather icon-weather-unknow'||img2=='icon-weathersmall icon-weathersmall-unknow'||img2=='icon-weathermin icon-weathermin-unknow'){
+            return img1;
+        }
+        return img2;
+    }
+</script>
+
+<div>
+    <div class="stl-checkinprocess mb20">
+        <div class="checkin-step5"></div>
+        <ul>
+            <li>用户验证</li>
+            <li>行程信息</li>
+            <li>航班信息</li>
+            <li>选择座位</li>
+            <li class="cur">成功值机</li>
+        </ul>
+        <div class="clear"></div>
+    </div>
+    <div id="stl_onlinecheckin_processing">
+        <form id="cussFinishPaForm" method="post" action="">
+            <input type="hidden" name="selectedSeg"
+                   value="OPEN FOR USE,MU,CAN,781-8246405692,白小林,1,MU5182,K,0,G"> <input
+                type="hidden" name="inputtype"
+                value="NI"> <input
+                type="hidden" name="inputno"
+                value="420103198710142222"> <input
+                type="hidden" name="languageid" id="languageid"
+                value="zh_CN" >
+            <input id="phoneno" name="phoneno" type="hidden" value="15377617500" >
+
+            <div class="onlinecheckin_list">
+                <table class="table">
+                    <tbody>
+                    <tr class="header">
+                        <td colspan="5"><i class="icon-table icon-table-user"></i>
+                            您已成功办理网上乘机登记手续，请确认您的值机信息。</td>
+                    </tr>
+                    <tr>
+                        <td width="10%"><b>姓名</b></td>
+                        <td width="15%">白小林</td>
+                        <td class="sep"></td>
+                        <td width="10%"><b>座位号</b></td>
+                        <td width="15%">62D</td>
+                    </tr>
+                    <tr>
+                        <td><b>航班号</b></td>
+                        <td>MU5182</td>
+                        <td class="sep"></td>
+                        <td><b>起飞城市</b></td>
+                        <td>广州</td>
+                    </tr>
+                    <tr>
+                        <td><b>航班日期</b></td>
+                        <td>2018-05-05 11:55</td>
+                        <td class="sep"></td>
+                        <td><b>目的地城市</b></td>
+                        <td>北京</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <ul>
+                <li class="pull-left wp30"></li>
+                <li class="pull-left wp100 tr"><input
+                        class="btn_reviewcard btn btn-green btn-large"
+                        name="btnPreviewBoardingPass" id="btnPreviewBoardingPass"
+                        onclick="btnPreviewBoardingPass_click()" type="submit"
+                        value='预览登机牌' > <input class="btn_quit btn btn-white btn-xsmall"
+                                               id="btnCardinfoExit" type="button" value='退出'
+                                               onclick="btnFinishPaExit_click()"></li>
+            </ul>
+        </form>
+    </div>
+
+    <div class="clear mb30"></div>
+    <div class="stl-weatherwrap">
+        <h2 class="mb10">
+            北京&nbsp;最近天气 <i class="icon-infotips icon-infotips-destination"></i>
+        </h2>
+        <hr class="mb20">
+        <ul class="stl-sub3dayweather stl-sub3dayweather-col3">
+            <li id="wazj5_weather1">
+                <i id="target_icon_today"></i>
+                <h3 id="target_date_today"></h3>
+                <span id="target_desc_today"></span>
+                <span id="target_city_today"></span></li>
+            <li id="wazj5_weather2">
+                <i id="target_icon_tomorrow"></i>
+                <h3 id="target_date_tomorrow"></h3>
+                <span id="target_desc_tomorrow"></span>
+                <span id="target_city_tomorrow"></span></li>
+            <li id="wazj5_weather3">
+                <i id="target_icon_after_tomorrow"></i>
+                <h3 id="target_date_after_tomorrow"></h3>
+                <span id="target_desc_after_tomorrow"></span>
+                <span id="target_city_after_tomorrow"></span></li>
+        </ul>
+    </div>
+</div>
