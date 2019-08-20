@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class Num_1_in_a_byte {
     public static void main(String[] args) {
-        int test_num = 255;  // java byte范围是-128到127，这里用int表示一个字节的无符号整型数
+        int test_num = 254;  // java byte范围是-128到127，这里用int表示一个字节的无符号整型数
         // way 1
         byte num_1 = count_1_in_byte_num_1(test_num);
         System.out.println("方式一：" + num_1);
@@ -24,6 +24,10 @@ public class Num_1_in_a_byte {
         // way 3 more effective
         byte num_3 = count_1_in_byte_num_3(test_num);
         System.out.println("方式三：" + num_3);
+
+        // way 4
+        byte num_4 = count_1_in_byte_num_4(test_num);
+        System.out.println("方式四：" + num_4);
 
         System.out.println(Integer.toBinaryString(test_num));
     }
@@ -48,8 +52,8 @@ public class Num_1_in_a_byte {
     private static byte count_1_in_byte_num_1(int test_num) {
         byte num_1 = 0;
         if (check(test_num)) return num_1;
-        while(test_num % 2 != 0) {
-            num_1 += 1;
+        while(test_num != 0) {
+            if (test_num % 2 == 1) num_1 += 1;
             test_num /= 2;
         }
         return num_1;
@@ -59,6 +63,16 @@ public class Num_1_in_a_byte {
         byte num_1 = 0;
         if (check(test_num)) return num_1;
         num_1 = (byte)StringUtils.countMatches(Integer.toBinaryString(test_num), "1");
+        return num_1;
+    }
+
+    private static byte count_1_in_byte_num_4(int test_num) {
+        byte num_1 = 0;
+        if (check(test_num)) return num_1;
+        while(test_num > 0) {
+            num_1 += test_num & 0x01;
+            test_num >>= 1;
+        }
         return num_1;
     }
 }
